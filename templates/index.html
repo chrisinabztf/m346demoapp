@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudGallery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .gallery-img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+        .storage-badge { position: absolute; top: 8px; right: 8px; }
+        .card { position: relative; }
+    </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <span class="navbar-brand fw-bold">☁️ CloudGallery</span>
+        <span class="badge bg-{% if storage_mode == 's3' %}success{% else %}warning text-dark{% endif %} fs-6">
+            Storage: {{ storage_mode.upper() }}
+        </span>
+    </div>
+</nav>
+
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{% if category == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- Upload -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Bild hochladen</h5>
+            <form action="/upload" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                <input type="file" name="file" class="form-control" accept="image/*" required>
+                <button type="submit" class="btn btn-primary px-4">Hochladen</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Galerie -->
+    {% if image_urls %}
+    <div class="row g-3">
+        {% for image, url in image_urls %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card shadow-sm">
+                <img src="{{ url }}" class="gallery-img" alt="{{ image.original_name }}">
+                <span class="badge bg-{% if image.storage == 's3' %}success{% else %}warning text-dark{% endif %} storage-badge">
+                    {{ image.storage.upper() }}
+                </span>
+                <div class="card-body p-2">
+                    <small class="text-muted d-block text-truncate">{{ image.original_name }}</small>
+                    <small class="text-muted">{{ image.uploaded_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                    <form action="/delete/{{ image.id }}" method="post" class="mt-1">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                            onclick="return confirm('Wirklich löschen?')">Löschen</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <h3>Noch keine Bilder vorhanden</h3>
+        <p>Lade dein erstes Bild hoch!</p>
+    </div>
+    {% endif %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
