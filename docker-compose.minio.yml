@@ -1,0 +1,58 @@
+# Phase 4: MinIO S3 Storage (Bilder bleiben auch nach Neustart!)
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=change-me-in-production
+      - DB_HOST=db
+      - DB_USER=gallery
+      - DB_PASS=gallery
+      - DB_NAME=gallery
+      - STORAGE_MODE=s3
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET=cloudgallery
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11
+    environment:
+      - MYSQL_DATABASE=gallery
+      - MYSQL_USER=gallery
+      - MYSQL_PASSWORD=gallery
+      - MYSQL_ROOT_PASSWORD=rootpassword
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
+  minio_data:
