@@ -1,0 +1,27 @@
+services:
+  cloudgallery:
+    image: cloudgallery:local
+    ports:
+      - "5000:5000"
+    environment:
+      STORAGE_MODE: local
+      DB_HOST: db
+      DB_USER: cloudgallery
+      DB_PASS: cloudgallery123
+      DB_NAME: cloudgallery
+    restart: on-failure
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: cloudgallery
+      MYSQL_USER: cloudgallery
+      MYSQL_PASSWORD: cloudgallery123
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:

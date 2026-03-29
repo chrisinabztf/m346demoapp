@@ -1,0 +1,45 @@
+services:
+  cloudgallery:
+    image: cloudgallery:local
+    ports:
+      - "5000:5000"
+    environment:
+      STORAGE_MODE: s3
+      DB_HOST: db
+      DB_USER: cloudgallery
+      DB_PASS: cloudgallery123
+      DB_NAME: cloudgallery
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: cloudgallery
+    restart: on-failure
+    depends_on:
+      - db
+      - minio
+
+  db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: cloudgallery
+      MYSQL_USER: cloudgallery
+      MYSQL_PASSWORD: cloudgallery123
+    volumes:
+      - db-data:/var/lib/mysql
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+
+volumes:
+  db-data:
+  minio-data:
